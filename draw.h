@@ -5,25 +5,14 @@
 
 #include"pxl.h"
 #include"coord.h"
+#include"player.h"
+
+
+void drawmonster(screen,monster);
+void drawrect( screen, v2, v2, color );
 
 
 
 
-
-
-
-
-
-struct color{
-  unsigned int r,g,b,a;
-};
-
-static const color Red = {255,0,0,255};
-static const color Green={0,255,0,255};
-static const color Grey ={100,100,100,255};
-
-void fill( image, color );
-void drawPoint( image, color, wCoord );
-void drawLine( image, color, wCoord, wCoord );
 
 #endif

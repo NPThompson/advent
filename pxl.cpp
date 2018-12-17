@@ -12,77 +12,83 @@
 
 
 
-screen::screen()
-{ window = NULL;
-  renderer = NULL;
-}
 
 
-
-screen::screen(const char* title, int w, int h)
-{  SDLtry( (window = SDL_CreateWindow(title,
+screen openWindow(const char* title, unsigned int w, unsigned int h)
+{ screen sdl;
+  
+  SDLtry( (sdl.window = SDL_CreateWindow(title,
 				      SDL_WINDOWPOS_UNDEFINED,
 				      SDL_WINDOWPOS_UNDEFINED,
 				      w, h,
 				      SDL_WINDOW_RESIZABLE )) != NULL );
   
-  SDLtry( (renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED )) != NULL );
+  SDLtry( (sdl.render = SDL_CreateRenderer( sdl.window, -1, SDL_RENDERER_ACCELERATED )) != NULL );
+  
+  return sdl;
 } 
 
-
-
-screen::~screen()
-{ SDL_DestroyWindow(   window   );
-  SDL_DestroyRenderer( renderer );
+void closeWindow(screen sdl)
+{ SDL_DestroyWindow(sdl.window);
+  SDL_DestroyRenderer(sdl.render);
 }
 
 
 
-
-
-void screen::clear()
-{ SDL_SetRenderTarget( renderer, NULL );
-  SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
-  SDL_RenderClear(        renderer               );
+void setColor( screen sc, color c )
+{SDL_SetRenderDrawColor(sc.render,c.r,c.g,c.b,c.a);
 }
 
 
 
-void screen::draw( image graphic )
-{ SDL_RenderCopy( renderer, graphic.data(), NULL, NULL );
+void fill( screen sc, color c )
+{ setColor(sc,c);
+  SDL_RenderClear(sc.render);
 }
 
 
 
-void screen::draw( image graphic, float scale, v2 offset )
-{//calculate source and dest rects
-  v2 size = graphic.size() * scale;
-  SDL_Rect dest = { offset.x, offset.y, size.x, size.y };
-  SDL_RenderCopy( renderer, graphic.data(), NULL, &dest );
+void flip( screen sc )
+{SDL_RenderPresent(sc.render);
 }
 
 
 
-void screen::flip()
-{ SDL_RenderPresent( renderer );
-}
+// void screen::draw( image graphic )
+// { SDL_RenderCopy( renderer, graphic.data(), NULL, NULL );
+// }
 
 
 
-image screen::newImage()
-{ return image( renderer );
-}
+// void screen::draw( image graphic, float scale, v2 offset )
+// {//calculate source and dest rects
+//   v2 size = graphic.size() * scale;
+//   SDL_Rect dest = { offset.x, offset.y, size.x, size.y };
+//   SDL_RenderCopy( renderer, graphic.data(), NULL, &dest );
+// }
 
 
 
-image screen::newImage(const char* fp)
-{ return image( renderer, fp );
-}
+// void screen::flip()
+// { SDL_RenderPresent( renderer );
+// }
 
 
 
-v2 screen::size()
-{ int w,h;
-  SDL_GetWindowSize(window,&w,&h);
-  return v2(w,h);
-}
+// image screen::newImage()
+// { return image( renderer );
+// }
+
+
+
+// image screen::newImage(const char* fp)
+// { return image( renderer, fp );
+// }
+
+
+
+// v2 screen::size()
+// { int w,h;
+//   SDL_GetWindowSize(window,&w,&h);
+//   return v2(w,h);
+// }

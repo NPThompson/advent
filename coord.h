@@ -29,7 +29,7 @@ v2 operator-(v2,v2);
 v2 operator*(v2,float);
 v2 operator/(v2,float);
 
-
+v2 operator+=(v2&, v2);
 
 class wCoord{
  public:

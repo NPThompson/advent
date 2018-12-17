@@ -1,4 +1,6 @@
 #include"pxl.h"
+#include"draw.h"
+#include"player.h"
 
 
 
@@ -7,31 +9,30 @@
 
 
 
+auto                sc   = openWindow("advent v 0.0");
+static const Uint8* kbd;
+player              p1;
+               
+
+bool    mainLoop();
+void    handleControls();
+void    redraw();
+void    update(double);
+#define quit()      closeWindow(sc); return false
 
 
-screen sc("pxl v 0.0");
-
-//The drawing canvas, viewport origin(offset), and zoom level are managed explicitly.
-//screen supplies only the most basic SDL window+renderer functionality.
-image canvas;
-float zoom = 1.0;
-v2    offset(0,0);
 
 
-bool mainLoop();
-void drawCanvas();
-void penMode();
+
 
 
 
 int main( int argc, char** argv )
-{ canvas = sc.newImage();
-  fill( canvas, Grey );
-  drawCanvas();
-  
+{ p1.avatar   = new monster(v2(10,10));
+  p1.controls = defaultP1keymap;
 
-  while(mainLoop()){}
-
+  while(mainLoop())
+    {}
   return 0;
 }
 
@@ -46,81 +47,76 @@ int main( int argc, char** argv )
 
 /*Subroutines*/
 bool mainLoop()
-{ SDL_Event ev;
-  SDL_WaitEvent(&ev);
-
-  static const int view_border = 30;//distance from edge before screen moves
-
+{ //waitforevent();
+  pollevents();
+  
   //escape key -> quit
-  if(ev.type == SDL_KEYDOWN )
-    { if( ev.key.keysym.scancode == SDL_SCANCODE_ESCAPE )
-	return false;
-      if( ev.key.keysym.scancode == SDL_SCANCODE_SPACE )
-       {zoom = 1.0;
-        offset = v2(0,0);
-        drawCanvas();
-       }
+  ifev(SDL_KEYDOWN)
+    {ifev(SDL_SCANCODE_ESCAPE)
+	{ quit();
+	}
     }
 
-
-  //Move view when mouse near edges of screen
-  if(ev.type == SDL_MOUSEMOTION )
-    { if( ev.motion.x < view_border )
-	{ offset.x += view_border - ev.motion.x;
-	}
-      if( ev.motion.x > sc.size().x - view_border )
-	{ offset.x -= sc.size().x - ev.motion.x;
-	}
-      if( ev.motion.y < view_border )
-	{ offset.y += view_border - ev.motion.y;
-	}
-      if( ev.motion.y > sc.size().y - view_border )
-	{ offset.y -= sc.size().y - ev.motion.y;
-	}
-      
-      drawCanvas();
+  //close window -> quit
+  ifev(SDL_QUIT)
+    { quit();
     }
 
-  //zoom on scrool
-  if(ev.type == SDL_MOUSEWHEEL )
-    { if(ev.wheel.y > 0)//zoom in
-        zoom *= 1.6;
-      if(ev.wheel.y < 0)//zoom out
-	zoom /= 1.6;
-      drawCanvas();
-    }
-  
-  if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_LEFT )
-    penMode();
-  
+  //default continue
+  handleControls();
+  update(0.001);
+  redraw();
   return true;
 }
 
 
-//Continue to draw until user releases mouse
-void penMode()
-{ v2        prev;
-  SDL_Event ev;
-  bool      fst = true;
-  do{
-    SDL_WaitEvent( &ev );
-    if( fst )
-      { drawPoint(canvas, Green, (mouse() - offset)/zoom);
-	fst = false;
-      }
-    else
-      drawLine(canvas, Green, (mouse() - offset)/zoom, (prev - offset)/zoom );
-    prev = mouse();    
-    drawCanvas();
-  }while(ev.type != SDL_MOUSEBUTTONUP );
 
-
+void update(double dt)
+{ p1.avatar->position += p1.avatar->momentum * dt;
 }
 
 
 
-void drawCanvas()
-{ sc.clear();
-  sc.draw( canvas, zoom, offset );
-  sc.flip();
+void redraw()
+{ fill( sc, Black );
+  drawmonster(sc,*p1.avatar);
+  flip( sc );
 }
+
+
+
+void handleControls()
+{static         bool fst = true;
+
+ //Only call GetKeyboardState the first time handleControls is called, use fst to tell if this is the first time
+ if(fst)
+  {kbd = SDL_GetKeyboardState(NULL);
+   fst = false;//never call GetKeyboardState again
+  }
+
+ controlavatar( p1 );
+}
+
+
+
+
+
+#define ifk( _C_ ) if( kbd [ p.controls[ control::_C_ ]])
+
+void controlavatar( player p )
+{ if( p.avatar != NULL )
+    { ifk( Left )
+	{ p.avatar->momentum += v2(-1, 0 );
+	}
+      ifk( Right )
+	{ p.avatar->momentum += v2( 1, 0 );
+	}
+      ifk( Up )
+	{ p.avatar->momentum += v2( 0,-1 );
+	}
+      ifk( Down )
+	{ p.avatar->momentum += v2( 0, 1 );
+	}
+    }
+}
+#undef ifk

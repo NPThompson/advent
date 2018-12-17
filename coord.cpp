@@ -36,6 +36,11 @@ v2 operator/(v2 v, float s)
 { return v * (1/s);
 }
 
+v2 operator+=(v2& v, v2 w)
+{ v = v + w;
+  return v;
+}
+
 v2::v2()
 { x = y = 0;
 }
